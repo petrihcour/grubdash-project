@@ -138,6 +138,16 @@ function update(req, res, next) {
 }
 
 // MIDDLEWARE VALIDATION for STATUS property of the order !== "pending", "An order cannot be deleted unless it is pending. Returns a 400 status code"
+function statusPropertyPending(req, res, next) {
+    const { order } = res.locals;
+    if (order === "pending") {
+        return next();
+    }
+    next({
+        status: 400, 
+        message: `An order cannot be deleted unless it is pending`
+    })
+}
 
 // DELETE, Destroy specific order id, return 204 message where id === :orderId and NO RESPONSE BODY, or return 404 if no matching order found. USE VALIDATION FOR ORDER !== PENDING
 
