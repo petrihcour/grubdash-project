@@ -27,6 +27,15 @@ function bodyDataHas(propertyName) {
 }
 
 // has PRICE that is 0 or less, and is not an integer "Dish must have a price that is an integer greater than 0"
+function priceIsValidNumber(req, res, next) {
+    const { data: { price } = {} } = req.body;
+    if (price <= 0 || !Number.isInteger(price)) {
+        return next({
+            status: 400,
+            message: `Dish must have a price that is an integer greater than 0`
+        })
+    }
+}
 
 // MIDDLEWARE FOR id in the body does not match :dishId in the route   /	"Dish id does not match route id. Dish: ${id}, Route: ${dishId}"
 
