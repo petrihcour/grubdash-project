@@ -1,12 +1,6 @@
 const path = require("path");
-
-// Use the existing order data
 const orders = require(path.resolve("src/data/orders-data"));
-
-// Use this function to assigh ID's when necessary
 const nextId = require("../utils/nextId");
-
-// TODO: Implement the /orders handlers needed to make the tests pass
 
 // GET, List orders
 function list(req, res, next) {
@@ -142,8 +136,7 @@ function create(req, res, next) {
 
 // GET, Read specific order by id (MIDDLEWARE FOR NO MATCHING ORDER)
 function read(req, res, next) {
-  const { order } = res.locals;
-  res.json({ data: order });
+  res.json({ data: res.locals.order });
 }
 
 // PUT, Update specific order id (MIDDLEWARE FOR NO MATCHING ORDER) * MUST INCLUDE SAME VALIDATION AS POST /ORDERS, AND MIDDLEWARE FOR STATUS PROPERTY MISSING OR EMPTY, & STATUS PROPERTY OF EXISTING ORDER === DELIVERED
