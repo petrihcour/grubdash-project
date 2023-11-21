@@ -13,6 +13,7 @@ router.route("/")
 
 router.route("/:dishId")
 .get(controller.read)
+.put(controller.update)
 .delete(methodNotAllowed)
 .all(methodNotAllowed);
 
