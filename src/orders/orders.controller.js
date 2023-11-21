@@ -19,6 +19,7 @@ function bodyDataHas(propertyName) {
   return function (req, res, next) {
     const { data = {} } = req.body;
     if (data[propertyName]) {
+      res.locals.reqBody = data;
       return next();
     }
     next({
@@ -61,27 +62,46 @@ function dishQuantityPropertyIsValid(req, res, next) {
   next();
 }
 
+function orderExists(req, res, next) {
+  const { orderId } = req.params;
+  const foundOrder = orders.find((order) => orderId === order.id);
+  if (foundOrder) {
+    res.locals.order = foundOrder;
+    res.locals.orderId = orderId;
+    return next();
+  }
+  next({
+    status: 404, 
+    message: `No matching order is found for orderId: ${orderId}.`
+  });
+}
+
 // MIDDLEWARE if no matching order of id w/ specified orderId is found, return 404 "Order id does not match route id. Order: ${id}, Route: ${orderId}."
 function validOrderId(req, res, next) {
-    const { orderId } = req.params;
-    const { id } = req.body.data || {};
-    const foundOrder = orders.find((order) => String(orderId) === String(order.id));
+  const { orderId } = res.locals;
+  const { reqBody } = res.locals;
 
-    if (foundOrder) {
-      res.locals.order = foundOrder;
+  if(reqBody.id) {
+    if (reqBody.id === orderId) {
       return next();
     }
-
     next({
-      status: 404,
-      message: `Order id does not match route id. Order: ${id}, Order: ${orderId}`,
+      status: 400,
+      message: `Order id does not match route id. Order: ${reqBody.id}, Order: ${orderId}`,
     });
   }
+  return next();
+}
 
 // middleware for STATUS property is missing or empty, "Order must have a status of pending, preparing, out-for-delivery, delivered"
 function statusPropertyIsValid(req, res, next) {
   const { data: { status } = {} } = req.body;
-  const validStatuses = ["pending", "preparing", "out-for-delivery", "delivered"];
+  const validStatuses = [
+    "pending",
+    "preparing",
+    "out-for-delivery",
+    "delivered",
+  ];
 
   if (status && validStatuses.includes(status)) {
     res.locals.status = status;
@@ -105,60 +125,60 @@ function statusPropertyIsDelivered(req, res, next) {
 // POST, Create an order. SAVES order and responds with NEWLY CREATED ORDER. What status code is that?????
 // Use 'nextId' function to assign a new id
 function create(req, res, next) {
-    const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
-    const newOrderId = nextId();
-    const orderDishes = dishes.map((dish) => ({ ...dish }));
+  const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+  const newOrderId = nextId();
+  const orderDishes = dishes.map((dish) => ({ ...dish }));
 
-    const newOrder = {
-        id: newOrderId,
-        deliverTo, 
-        mobileNumber,
-        status,
-        dishes: orderDishes,
-    }
-    orders.push(newOrder);
-    res.status(201).json({ data: newOrder });
+  const newOrder = {
+    id: newOrderId,
+    deliverTo,
+    mobileNumber,
+    status,
+    dishes: orderDishes,
+  };
+  orders.push(newOrder);
+  res.status(201).json({ data: newOrder });
 }
 
 // GET, Read specific order by id (MIDDLEWARE FOR NO MATCHING ORDER)
 function read(req, res, next) {
-    const { order } = res.locals;
-    res.json({ data: order });
+  const { order } = res.locals;
+  res.json({ data: order });
 }
 
 // PUT, Update specific order id (MIDDLEWARE FOR NO MATCHING ORDER) * MUST INCLUDE SAME VALIDATION AS POST /ORDERS, AND MIDDLEWARE FOR STATUS PROPERTY MISSING OR EMPTY, & STATUS PROPERTY OF EXISTING ORDER === DELIVERED
 function update(req, res, next) {
-    const { order } = res.locals;
-    const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+  const { order } = res.locals;
+  const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
 
-    order.deliverTo = deliverTo;
-    order.mobileNumber = mobileNumber;
-    order.status = status;
-    order.dishes = dishes;
+  order.deliverTo = deliverTo;
+  order.mobileNumber = mobileNumber;
+  order.status = status;
+  order.dishes = dishes;
 
-    res.json({ data: order });
+  res.json({ data: order });
 }
 
 // MIDDLEWARE VALIDATION for STATUS property of the order !== "pending", "An order cannot be deleted unless it is pending. Returns a 400 status code"
 function statusPropertyPending(req, res, next) {
-    const { order } = res.locals;
-    if (order.status === "pending") {
-        return next();
-    }
-    next({
-        status: 400, 
-        message: `An order cannot be deleted unless it is pending`
-    })
+  const { order } = res.locals;
+  if (order.status === "pending") {
+    return next();
+  }
+  next({
+    status: 400,
+    message: `An order cannot be deleted unless it is pending`,
+  });
 }
 
 // DELETE, Destroy specific order id, return 204 message where id === :orderId and NO RESPONSE BODY, or return 404 if no matching order found. USE VALIDATION FOR ORDER !== PENDING
 function destroy(req, res, next) {
-    const { orderId } = req.params;
-    const index = orders.findIndex((order) => order.id === orderId);
-    if (index > -1) {
-        orders.splice(index, 1);
-    }
-    res.sendStatus(204);
+  const { orderId } = req.params;
+  const index = orders.findIndex((order) => order.id === orderId);
+  if (index > -1) {
+    orders.splice(index, 1);
+  }
+  res.sendStatus(204);
 }
 
 module.exports = {
@@ -171,8 +191,9 @@ module.exports = {
     dishQuantityPropertyIsValid,
     create,
   ],
-  read: [validOrderId, read],
+  read: [orderExists, read],
   update: [
+    orderExists,
     bodyDataHas("deliverTo"),
     bodyDataHas("mobileNumber"),
     bodyDataHas("status"),
@@ -184,9 +205,5 @@ module.exports = {
     statusPropertyIsDelivered,
     update,
   ],
-  delete: [
-    validOrderId,
-    statusPropertyPending,
-    destroy,
-  ],
+  delete: [orderExists, statusPropertyPending, destroy],
 };
