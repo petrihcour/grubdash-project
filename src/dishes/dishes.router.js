@@ -6,8 +6,13 @@ const methodNotAllowed = require("../errors/methodNotAllowed");
 
 // GET, POST /dishes 
 
-router.route("/").get(controller.list);
+router.route("/")
+.get(controller.list)
+.post(controller.create)
+.all(methodNotAllowed);
 
-router.route("/:dishId").delete(methodNotAllowed);
+router.route("/:dishId")
+.delete(methodNotAllowed)
+.all(methodNotAllowed);
 
 module.exports = router;
