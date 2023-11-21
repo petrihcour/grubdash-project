@@ -37,6 +37,7 @@ function dishPropertyIsValid(req, res, next) {
       message: `Order must include at lease one dish`,
     });
   }
+  res.locals.dishes = dishes;
   next();
 }
 
@@ -63,8 +64,23 @@ function dishQuantityPropertyIsValid(req, res, next) {
 // MIDDLEWARE if no matching order of id w/ specified orderId is found, return 404 "Order id does not match route id. Order: ${id}, Route: ${orderId}."
 
 // middleware for STATUS property is missing or empty, "Order must have a status of pending, preparing, out-for-delivery, delivered"
+function statusPropertyIsValid(req, res, next) {
+    const { data: { status } = {} } = req.body;
+    if (status) {
+        res.locals.status = status;
+        return next();
+    }
+    next({
+        status: 400,
+        message: `Order must have a status of pending, preparing, out-for-delivery, delivered`
+    })
+}
 
 // MIDDLWARE FOR STATUS property of the existing order === "delivered"	"A delivered order cannot be changed"
+function statusPropertyIsDelivered(req, res, next) {
+    const { status } = res.locals;
+    
+}
 
 // POST, Create an order. SAVES order and responds with NEWLY CREATED ORDER. What status code is that?????
 // Use 'nextId' function to assign a new id
