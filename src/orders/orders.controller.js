@@ -10,6 +10,9 @@ const nextId = require("../utils/nextId");
 
 
 // GET, List orders
+function list(req, res, next) {
+    res.json({ data: orders });
+}
 
 // MIDDLEWARE STATUS CODE 400 & error message validation for:
 // deliverTo property is missing or empty "Order must include a deliverTo"
@@ -36,3 +39,6 @@ const nextId = require("../utils/nextId");
 
 // DELETE, Destroy specific order id, return 204 message where id === :orderId and NO RESPONSE BODY, or return 404 if no matching order found. USE VALIDATION FOR ORDER !== PENDING
 
+module.exports = {
+    list,
+}
