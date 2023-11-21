@@ -128,4 +128,13 @@ function create(req, res, next) {
 
 module.exports = {
   list,
+  create: [
+    bodyDataHas("deliverTo"),
+    bodyDataHas("mobileNumber"),
+    bodyDataHas("status"),
+    bodyDataHas("dishes"),
+    dishPropertyIsValid,
+    dishQuantityPropertyIsValid,
+    create,
+  ]
 };
