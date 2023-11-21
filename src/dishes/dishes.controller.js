@@ -53,6 +53,20 @@ function validDishId(req, res, next) {
 
 // POST, Create a dish
 // Use 'nextId' function to assign a new id
+function create(req, res, next) {
+    const newDishId = nextId();
+    const { data: { name, description, price, image_url } = {} } = req.body;
+
+    const newDish = {
+        id: newDishId,
+        name,
+        description, 
+        price,
+        image_url,
+    };
+    dishes.push(newDish);
+    res.status(201).json({ data: newDish });
+}
 
 // GET, Read specific dish by id (MIDDLEWARE FOR VALID DISH)
 
