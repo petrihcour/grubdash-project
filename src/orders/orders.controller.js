@@ -166,7 +166,6 @@ module.exports = {
   create: [
     bodyDataHas("deliverTo"),
     bodyDataHas("mobileNumber"),
-    bodyDataHas("status"),
     bodyDataHas("dishes"),
     dishPropertyIsValid,
     dishQuantityPropertyIsValid,
