@@ -65,8 +65,8 @@ function orderExists(req, res, next) {
     return next();
   }
   next({
-    status: 404, 
-    message: `No matching order is found for orderId: ${orderId}.`
+    status: 404,
+    message: `No matching order is found for orderId: ${orderId}.`,
   });
 }
 
@@ -75,7 +75,7 @@ function validOrderId(req, res, next) {
   const { orderId } = res.locals;
   const { reqBody } = res.locals;
 
-  if(reqBody.id) {
+  if (reqBody.id) {
     if (reqBody.id === orderId) {
       return next();
     }
