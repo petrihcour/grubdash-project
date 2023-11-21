@@ -62,6 +62,21 @@ function dishQuantityPropertyIsValid(req, res, next) {
 }
 
 // MIDDLEWARE if no matching order of id w/ specified orderId is found, return 404 "Order id does not match route id. Order: ${id}, Route: ${orderId}."
+function validOrderId(req, res, next) {
+    const { orderId } = req.params;
+    const { id } = req.body.data || {};
+    const foundOrder = orders.find((order) => String(orderId) === String(order.id));
+
+    if (foundOrder) {
+      res.locals.order = foundOrder;
+      return next();
+    }
+
+    next({
+      status: 404,
+      message: `Order id does not match route id. Order: ${id}, Order: ${orderId}`,
+    });
+  }
 
 // middleware for STATUS property is missing or empty, "Order must have a status of pending, preparing, out-for-delivery, delivered"
 function statusPropertyIsValid(req, res, next) {
