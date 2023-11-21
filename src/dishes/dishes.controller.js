@@ -17,7 +17,7 @@ function bodyDataHas(propertyName) {
   return function (req, res, next) {
     const { data = {} } = req.body;
     if (data[propertyName]) {
-      res.locals.reqBody = data;
+      res.locals.data = data;
       return next();
     }
     next({ status: 400, message: `Dish must include a ${propertyName}` });
@@ -26,8 +26,8 @@ function bodyDataHas(propertyName) {
 
 // has PRICE that is 0 or less, and is not an integer "Dish must have a price that is an integer greater than 0"
 function priceIsValidNumber(req, res, next) {
-  const { data: { price } = {} } = req.body;
-  if (price <= 0 || !Number.isInteger(price)) {
+  const { data } = res.locals;
+  if (data.price <= 0 || !Number.isInteger(data.price)) {
     return next({
       status: 400,
       message: `Dish must have a price that is an integer greater than 0`,
@@ -40,15 +40,13 @@ function priceIsValidNumber(req, res, next) {
 // Use 'nextId' function to assign a new id
 function create(req, res, next) {
   const newDishId = nextId();
-  const { data: { name, description, price, image_url } = {} } = req.body;
+  const { data } = res.locals; 
 
   const newDish = {
     id: newDishId,
-    name,
-    description,
-    price,
-    image_url,
+    ...data,
   };
+
   dishes.push(newDish);
   res.status(201).json({ data: newDish });
 }
@@ -74,15 +72,15 @@ function dishExists(req, res, next) {
 // MIDDLEWARE FOR id in the body does not match :dishId in the route   /	"Dish id does not match route id. Dish: ${id}, Route: ${dishId}"
 function bodyIdMatchesRouteId(req, res, next) {
   const { dishId } = res.locals;
-  const { reqBody } = res.locals;
+  const { data } = res.locals;
 
-  if (reqBody.id) {
-    if (reqBody.id === dishId) {
+  if (data.id) {
+    if (data.id === dishId) {
       return next();
     }
     next({
       status: 400,
-      message: `Dish id does not match route id. Dish: ${reqBody.id}, Route: ${dishId}`,
+      message: `Dish id does not match route id. Dish: ${data.id}, Route: ${dishId}`,
     });
   }
   return next();
@@ -96,13 +94,13 @@ function read(req, res, next) {
 // PUT, Update specific dish id (MIDDLEWARE FOR VALID DISH)
 function update(req, res, next) {
   const { dish } = res.locals;
-  const { data: { name, description, price, image_url } = {} } = req.body;
+  const { data } = res.locals; 
 
   // Update dish
-  dish.name = name;
-  dish.description = description;
-  dish.price = price;
-  dish.image_url = image_url;
+  dish.name = data.name;
+  dish.description = data.description;
+  dish.price = data.price;
+  dish.image_url = data.image_url;
 
   res.json({ data: dish });
 }
