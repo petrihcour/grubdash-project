@@ -37,20 +37,6 @@ function priceIsValidNumber(req, res, next) {
   next();
 }
 
-// MIDDLEWARE FOR id in the body does not match :dishId in the route   /	"Dish id does not match route id. Dish: ${id}, Route: ${dishId}"
-function validDishId(req, res, next) {
-  const { dishId } = req.params;
-  const foundDish = dishes.find((dish) => dishId === dish.id);
-  if (foundDish) {
-    res.locals.dish = foundDish;
-    return next();
-  }
-  next({
-    status: 404,
-    message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`,
-  });
-}
-
 // POST, Create a dish
 // Use 'nextId' function to assign a new id
 function create(req, res, next) {
@@ -68,7 +54,24 @@ function create(req, res, next) {
   res.status(201).json({ data: newDish });
 }
 
+// MIDDLEWARE FOR id in the body does not match :dishId in the route   /	"Dish id does not match route id. Dish: ${id}, Route: ${dishId}"
+function validDishId(req, res, next) {
+    const { dishId } = req.params;
+    const foundDish = dishes.find((dish) => dishId === dish.id);
+    if (foundDish) {
+      res.locals.dish = foundDish;
+      return next();
+    }
+    next({
+      status: 404,
+      message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`,
+    });
+  }
+
 // GET, Read specific dish by id (MIDDLEWARE FOR VALID DISH)
+function read(req, res, next) {
+    res.json({ data: res.locals.dish });
+}
 
 // PUT, Update specific dish id (MIDDLEWARE FOR VALID DISH)
 
@@ -87,5 +90,6 @@ module.exports = {
     priceIsValidNumber,
     create,
   ],
+  read: [validDishId, read],
   methodNotAllowed,
 };
