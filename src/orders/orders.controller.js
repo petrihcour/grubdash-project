@@ -102,6 +102,21 @@ function statusPropertyIsDelivered(req, res, next) {
 
 // POST, Create an order. SAVES order and responds with NEWLY CREATED ORDER. What status code is that?????
 // Use 'nextId' function to assign a new id
+function create(req, res, next) {
+    const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+    const newOrderId = nextId();
+    const orderDishes = dishes.map((dish) => ({ ...dish }));
+
+    const newOrder = {
+        id: newOrderId,
+        deliverTo, 
+        mobileNumber,
+        status,
+        dishes: orderDishes,
+    }
+    orders.push(newOrder);
+    res.status(201).json({ data: newOrder });
+}
 
 // GET, Read specific order by id (MIDDLEWARE FOR NO MATCHING ORDER)
 
