@@ -68,12 +68,27 @@ function validDishId(req, res, next) {
     });
   }
 
+// MIDDLEWARE VALIDATION FOR dish not existing "Dish does not exist: ${dishId}."
+
+
 // GET, Read specific dish by id (MIDDLEWARE FOR VALID DISH)
 function read(req, res, next) {
     res.json({ data: res.locals.dish });
 }
 
 // PUT, Update specific dish id (MIDDLEWARE FOR VALID DISH)
+function update(req, res, next) {
+    const { dish } = res.locals.dish;
+    const { data: { name, description, price, image_url } = {} } = req.body; 
+
+    // Update dish
+    dish.name = name;
+    dish.description = description;
+    dish.price = price;
+    dish.image_url = image_url;
+
+    res.json({ data: dish });
+}
 
 // DELETE, Destroy specific dish id. DISHES CANNOT BE DELETED!
 function destroy(request, response, next) {
