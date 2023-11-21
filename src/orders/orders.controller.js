@@ -119,6 +119,10 @@ function create(req, res, next) {
 }
 
 // GET, Read specific order by id (MIDDLEWARE FOR NO MATCHING ORDER)
+function read(req, res, next) {
+    const { order } = res.locals;
+    res.json({ data: order });
+}
 
 // PUT, Update specific order id (MIDDLEWARE FOR NO MATCHING ORDER) * MUST INCLUDE SAME VALIDATION AS POST /ORDERS, AND MIDDLEWARE FOR STATUS PROPERTY MISSING OR EMPTY, & STATUS PROPERTY OF EXISTING ORDER === DELIVERED
 
@@ -136,5 +140,6 @@ module.exports = {
     dishPropertyIsValid,
     dishQuantityPropertyIsValid,
     create,
-  ]
+  ],
+  read: [validOrderId, read],
 };
