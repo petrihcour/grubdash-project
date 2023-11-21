@@ -125,6 +125,17 @@ function read(req, res, next) {
 }
 
 // PUT, Update specific order id (MIDDLEWARE FOR NO MATCHING ORDER) * MUST INCLUDE SAME VALIDATION AS POST /ORDERS, AND MIDDLEWARE FOR STATUS PROPERTY MISSING OR EMPTY, & STATUS PROPERTY OF EXISTING ORDER === DELIVERED
+function update(req, res, next) {
+    const { order } = res.locals;
+    const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+
+    order.deliverTo = deliverTo;
+    order.mobileNumber = mobileNumber;
+    order.status = status;
+    order.dishes = dishes;
+
+    res.json({ data: order });
+}
 
 // MIDDLEWARE VALIDATION for STATUS property of the order !== "pending", "An order cannot be deleted unless it is pending. Returns a 400 status code"
 
@@ -142,4 +153,16 @@ module.exports = {
     create,
   ],
   read: [validOrderId, read],
+  update: [
+    bodyDataHas("deliverTo"),
+    bodyDataHas("mobileNumber"),
+    bodyDataHas("status"),
+    bodyDataHas("dishes"),
+    dishPropertyIsValid,
+    dishQuantityPropertyIsValid,
+    validOrderId,
+    statusPropertyIsValid,
+    statusPropertyIsDelivered,
+    update,
+  ]
 };
