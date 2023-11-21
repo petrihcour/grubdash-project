@@ -65,21 +65,24 @@ function dishQuantityPropertyIsValid(req, res, next) {
 
 // middleware for STATUS property is missing or empty, "Order must have a status of pending, preparing, out-for-delivery, delivered"
 function statusPropertyIsValid(req, res, next) {
-    const { data: { status } = {} } = req.body;
-    if (status) {
-        res.locals.status = status;
-        return next();
-    }
-    next({
-        status: 400,
-        message: `Order must have a status of pending, preparing, out-for-delivery, delivered`
-    })
+  const { data: { status } = {} } = req.body;
+  if (status) {
+    res.locals.status = status;
+    return next();
+  }
+  next({
+    status: 400,
+    message: `Order must have a status of pending, preparing, out-for-delivery, delivered`,
+  });
 }
 
 // MIDDLWARE FOR STATUS property of the existing order === "delivered"	"A delivered order cannot be changed"
 function statusPropertyIsDelivered(req, res, next) {
-    const { status } = res.locals;
-    
+  const { status } = res.locals;
+  if (status === "delivered") {
+    return next({ status: 400, message: `A delivery order cannot be changed` });
+  }
+  next();
 }
 
 // POST, Create an order. SAVES order and responds with NEWLY CREATED ORDER. What status code is that?????
