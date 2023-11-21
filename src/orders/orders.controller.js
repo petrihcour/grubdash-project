@@ -13,7 +13,7 @@ function bodyDataHas(propertyName) {
   return function (req, res, next) {
     const { data = {} } = req.body;
     if (data[propertyName]) {
-      res.locals.reqBody = data;
+      res.locals.data = data;
       return next();
     }
     next({
@@ -25,14 +25,14 @@ function bodyDataHas(propertyName) {
 
 // DISHES property is not an array or is empty "Order must include at least one dish"
 function dishPropertyIsValid(req, res, next) {
-  const { data: { dishes } = {} } = req.body;
-  if (!Array.isArray(dishes) || dishes.length === 0) {
+  const { data } = res.locals;
+  if (!Array.isArray(data.dishes) || data.dishes.length === 0) {
     return next({
       status: 400,
       message: `Order must include at lease one dish`,
     });
   }
-  res.locals.dishes = dishes;
+  res.locals.dishes = data.dishes;
   next();
 }
 
@@ -73,15 +73,15 @@ function orderExists(req, res, next) {
 // MIDDLEWARE if no matching order of id w/ specified orderId is found, return 404 "Order id does not match route id. Order: ${id}, Route: ${orderId}."
 function validOrderId(req, res, next) {
   const { orderId } = res.locals;
-  const { reqBody } = res.locals;
+  const { data } = res.locals;
 
-  if (reqBody.id) {
-    if (reqBody.id === orderId) {
+  if (data.id) {
+    if (data.id === orderId) {
       return next();
     }
     next({
       status: 400,
-      message: `Order id does not match route id. Order: ${reqBody.id}, Order: ${orderId}`,
+      message: `Order id does not match route id. Order: ${data.id}, Order: ${orderId}`,
     });
   }
   return next();
@@ -89,7 +89,7 @@ function validOrderId(req, res, next) {
 
 // middleware for STATUS property is missing or empty, "Order must have a status of pending, preparing, out-for-delivery, delivered"
 function statusPropertyIsValid(req, res, next) {
-  const { data: { status } = {} } = req.body;
+  const { data } = res.locals;
   const validStatuses = [
     "pending",
     "preparing",
@@ -97,8 +97,7 @@ function statusPropertyIsValid(req, res, next) {
     "delivered",
   ];
 
-  if (status && validStatuses.includes(status)) {
-    res.locals.status = status;
+  if (data.status && validStatuses.includes(data.status)) {
     return next();
   }
   next({
@@ -119,16 +118,12 @@ function statusPropertyIsDelivered(req, res, next) {
 // POST, Create an order. SAVES order and responds with NEWLY CREATED ORDER. What status code is that?????
 // Use 'nextId' function to assign a new id
 function create(req, res, next) {
-  const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+  const { data } = res.locals;
   const newOrderId = nextId();
-  const orderDishes = dishes.map((dish) => ({ ...dish }));
 
   const newOrder = {
     id: newOrderId,
-    deliverTo,
-    mobileNumber,
-    status,
-    dishes: orderDishes,
+    ...data,
   };
   orders.push(newOrder);
   res.status(201).json({ data: newOrder });
@@ -142,12 +137,12 @@ function read(req, res, next) {
 // PUT, Update specific order id (MIDDLEWARE FOR NO MATCHING ORDER) * MUST INCLUDE SAME VALIDATION AS POST /ORDERS, AND MIDDLEWARE FOR STATUS PROPERTY MISSING OR EMPTY, & STATUS PROPERTY OF EXISTING ORDER === DELIVERED
 function update(req, res, next) {
   const { order } = res.locals;
-  const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+  const { data } =  res.locals;
 
-  order.deliverTo = deliverTo;
-  order.mobileNumber = mobileNumber;
-  order.status = status;
-  order.dishes = dishes;
+  order.deliverTo = data.deliverTo;
+  order.mobileNumber = data.mobileNumber;
+  order.status = data.status;
+  order.dishes = data.dishes;
 
   res.json({ data: order });
 }
