@@ -16,7 +16,7 @@ GrubDash is a full-stack application website that allows people to create, read,
 - **Tech Stack**: I used Express to bring the backend of GrubDash to life.
 
 ## Explore GrubDash
-Ff you would like to see this project connected to a frontend application, visit the following repository: [GrubDash Front End](https://github.com/Thinkful-Ed/starter-grub-dash-front-end).
+If you would like to see this project connected to a frontend application, visit the following repository: [GrubDash Front End](https://github.com/Thinkful-Ed/starter-grub-dash-front-end).
 
 Instructions on how to get the frontend application up and running are included in the repository.
 
