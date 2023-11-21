@@ -81,7 +81,9 @@ function validOrderId(req, res, next) {
 // middleware for STATUS property is missing or empty, "Order must have a status of pending, preparing, out-for-delivery, delivered"
 function statusPropertyIsValid(req, res, next) {
   const { data: { status } = {} } = req.body;
-  if (status) {
+  const validStatuses = ["pending", "preparing", "out-for-delivery", "delivered"];
+
+  if (status && validStatuses.includes(status)) {
     res.locals.status = status;
     return next();
   }

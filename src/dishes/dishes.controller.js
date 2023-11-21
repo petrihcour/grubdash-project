@@ -11,14 +11,13 @@ function list(req, res) {
   res.json({ data: dishes });
 }
 
-// MIDDLEWARE validation for valid dish, return 404 if dish not found "Dish does not exist: ${dishId}."
-
 // MIDDLEWARE STATUS CODE 400 & error message validation for:
 // NAME, DESCRIPTION, PRICE. IMAGE_URL property missing or empty "Dish must include a ..."
 function bodyDataHas(propertyName) {
   return function (req, res, next) {
     const { data = {} } = req.body;
     if (data[propertyName]) {
+      res.locals.reqBody = data;
       return next();
     }
     next({ status: 400, message: `Dish must include a ${propertyName}` });
@@ -54,55 +53,58 @@ function create(req, res, next) {
   res.status(201).json({ data: newDish });
 }
 
-// MIDDLEWARE FOR id in the body does not match :dishId in the route   /	"Dish id does not match route id. Dish: ${id}, Route: ${dishId}"
-function validDishId(req, res, next) {
-    const { dishId } = req.params;
-    const { id } = req.body.data || {};
-    const foundDish = dishes.find((dish) => String(dishId) === String(dish.id));
+// MIDDLEWARE VALIDATION FOR dish not existing "Dish does not exist: ${dishId}."
+// MIDDLEWARE validation for valid dish, return 404 if dish not found "Dish does not exist: ${dishId}."
+function dishExists(req, res, next) {
+  const { dishId } = req.params;
+  const foundDish = dishes.find((dish) => dishId === dish.id);
 
-    if (foundDish) {
-      res.locals.dish = foundDish;
-      return next();
-    }
-
-    next({
-      status: 404,
-      message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`,
-    });
+  if (foundDish) {
+    res.locals.dish = foundDish;
+    res.locals.dishId = dishId;
+    return next();
   }
 
-// MIDDLEWARE VALIDATION FOR dish not existing "Dish does not exist: ${dishId}."
-function validDish(req, res, next) {
-    const { dish } = res.locals;
-    const { dishId } = req.params;
-    console.log("Res Locals:", res.locals);
+  next({
+    status: 404,
+    message: `Dish does not exist: ${dishId}.`,
+  });
+}
 
-    if (dish) {
-        return next();
+// MIDDLEWARE FOR id in the body does not match :dishId in the route   /	"Dish id does not match route id. Dish: ${id}, Route: ${dishId}"
+function bodyIdMatchesRouteId(req, res, next) {
+  const { dishId } = res.locals;
+  const { reqBody } = res.locals;
+
+  if (reqBody.id) {
+    if (reqBody.id === dishId) {
+      return next();
     }
     next({
-        status: 404,
-        message: `Dish does not exist: ${dishId}.`
-    })
+      status: 400,
+      message: `Dish id does not match route id. Dish: ${reqBody.id}, Route: ${dishId}`,
+    });
+  }
+  return next();
 }
 
 // GET, Read specific dish by id (MIDDLEWARE FOR VALID DISH)
 function read(req, res, next) {
-    res.json({ data: res.locals.dish });
+  res.json({ data: res.locals.dish });
 }
 
 // PUT, Update specific dish id (MIDDLEWARE FOR VALID DISH)
 function update(req, res, next) {
-    const { dish } = res.locals;
-    const { data: { name, description, price, image_url } = {} } = req.body; 
+  const { dish } = res.locals;
+  const { data: { name, description, price, image_url } = {} } = req.body;
 
-    // Update dish
-    dish.name = name;
-    dish.description = description;
-    dish.price = price;
-    dish.image_url = image_url;
+  // Update dish
+  dish.name = name;
+  dish.description = description;
+  dish.price = price;
+  dish.image_url = image_url;
 
-    res.json({ data: dish });
+  res.json({ data: dish });
 }
 
 // DELETE, Destroy specific dish id. DISHES CANNOT BE DELETED!
@@ -120,16 +122,16 @@ module.exports = {
     priceIsValidNumber,
     create,
   ],
-  read: [validDishId, read],
+  read: [dishExists, read],
   update: [
+    dishExists,
     bodyDataHas("name"),
     bodyDataHas("description"),
     bodyDataHas("price"),
     bodyDataHas("image_url"),
     priceIsValidNumber,
-    validDishId,
-    validDish, 
+    bodyIdMatchesRouteId,
     update,
- ],
+  ],
   methodNotAllowed,
 };
